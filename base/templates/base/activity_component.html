@@ -3,7 +3,10 @@
 
 {% for activity in last_activities %}
 <div>
-  <small>@{{activity.user}} {{activity.created|timesince}}</small>
+  <small
+    ><a href="{% url 'user-profile' activity.id %}">@{{activity.user}}</a>
+    {{activity.created|timesince}}</small
+  >
   <br /><small>replied to "{{activity.room}}"</small>
   <p>{{activity}}</p>
   {% if request.user == activity.user %}
