@@ -32,6 +32,9 @@ class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     updated = models.DateTimeField(auto_now=True) 
     created = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-updated', '-created']
         
     def __str__(self):
         return self.content[:50]
