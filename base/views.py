@@ -74,7 +74,6 @@ def home(request):
     
     #last_activities = Message.objects.filter(Q(room__name__icontains = q)) if q!= None else Message.objects.all()[:5]
     last_activities = Message.objects.all()[:5]
-    
     context = {'rooms': rooms, 'topics': topics, 'room_count': room_count, 'last_activities': last_activities}
     return render(request, 'base/home.html', context)
 
@@ -118,7 +117,10 @@ def create_room(request):
     if request.method == 'POST':
         form = RoomForm(request.POST)
         if form.is_valid():
-            form.save()
+            room = form.save(commit=False)
+            room.host = request.user
+            room.participants.add(request.user)
+            room.save()
             return redirect('home')
             
     context = {'form': form}
