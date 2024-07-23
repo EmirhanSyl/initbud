@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User 
 from django.contrib.auth import authenticate, login, logout  
 from django.contrib.auth.forms import UserCreationForm
-from .models import Room, Topic
+from .models import Room, Topic, Message
 from .forms import RoomForm
 
 def login_page(request):
@@ -78,8 +78,23 @@ def home(request):
 def room(request, pk):
     room = Room.objects.get(id=pk)
     room_messages = room.message_set.all().order_by('-created')
+    participants = room.participants.all()
     
-    context = {'room': room, 'room_messages':room_messages}
+    if request.method == "POST":
+        message_content = request.POST.get('message_content')
+        if message_content:
+            new_message = Message.objects.create(
+                room = room,
+                content = message_content,
+                user = request.user,
+            )
+            
+            if request.user not in participants:
+                room.participants.add(request.user)
+                
+            return redirect('room', pk)
+    
+    context = {'room': room, 'room_messages':room_messages, 'participants': participants}
     return render(request, 'base/room.html', context)
 
 @login_required(login_url='/login')
@@ -123,3 +138,16 @@ def delete_room(request, pk):
         return redirect("home")
     
     return render(request, 'base/delete.html', {'object':room})
+
+    
+@login_required(login_url='/login')
+def delete_message(request, pk):
+    selected_message = Message.objects.get(id=int(pk))
+    
+    if request.user != selected_message.user:
+        return HttpResponse("Forbidden")
+    
+    if request.method == 'POST':
+        selected_message.delete()
+        return redirect('home')
+    return render(request, 'base/delete.html', {'object':selected_message})
